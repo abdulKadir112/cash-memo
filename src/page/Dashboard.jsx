@@ -17,10 +17,24 @@ const Dashboard = () => {
 
     const handleInputChange = (index, field, value) => {
         const updatedItems = [...items];
-        updatedItems[index][field] = value;
+        
+        // বাংলা সংখ্যা ইংরেজিতে কনভার্ট করার জন্য
+        const convertBanglaToEnglish = (num) => {
+            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+            const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            return num
+                .split('')
+                .map((char) => (banglaDigits.includes(char) ? englishDigits[banglaDigits.indexOf(char)] : char))
+                .join('');
+        };
 
-        const quantity = parseFloat(updatedItems[index].quantity) || 0;
-        const rate = parseFloat(updatedItems[index].rate) || 0;
+        // ফিল্ডে বাংলা ইনপুট থাকলে ইংরেজিতে কনভার্ট করা
+        const convertedValue = field === 'quantity' || field === 'rate' ? convertBanglaToEnglish(value) : value;
+        updatedItems[index][field] = convertedValue;
+
+        // পরিমাণ ও দাম থেকে টাকা হিসাব করা
+        const quantity = parseFloat(convertBanglaToEnglish(updatedItems[index].quantity)) || 0;
+        const rate = parseFloat(convertBanglaToEnglish(updatedItems[index].rate)) || 0;
 
         if (field === 'quantity' || field === 'rate') {
             if (quantity > 0 && rate > 0) {
@@ -87,11 +101,11 @@ const Dashboard = () => {
                                         )}
                                         <input
                                             name={field}
-                                            type={field === 'taka' || field === 'rate' || field === 'quantity' ? 'number' : 'text'}
+                                            type={field === 'taka' || field === 'rate' || field === 'quantity' ? 'text' : 'text'}
                                             placeholder={language === 'bn' ? (field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : field === 'taka' ? 'টাকা' : field) : field.charAt(0).toUpperCase() + field.slice(1)}
                                             value={formatValue(row[field])}
                                             onChange={(e) => handleInputChange(index, field, e.target.value)}
-                                            className="outline-none md:py-2  rounded-sm md:px-3 md:rounded-md md:text-base text-sm placeholder:text-sm"
+                                            className="outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm placeholder:text-sm"
                                             readOnly={field === 'taka' && !isTakaEditable(row)}
                                         />
                                     </div>
