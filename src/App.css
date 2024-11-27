@@ -1,5 +1,10 @@
-/* প্লেসহোল্ডারের জন্য হালকা রঙ */
+
 .placeholder-light::placeholder {
-    color: #d3d3d3; /* হালকা ধূসর */
-    opacity: 1; /* প্লেসহোল্ডার দৃশ্যমান রাখে */
+    color: #d3d3d3; 
+    opacity: 1; 
+}
+
+.placeholder-light {
+    color: #ccc;
+    font-style: italic;
 }
