@@ -3,7 +3,7 @@ import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import Container from '../layer/Container';
 import '../App.css';
-import Header from '../components/Header';
+import Header from './Header';
 
 const convertToBangla = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -20,7 +20,7 @@ const CashMemo = () => {
         Array.from({ length: 5 }, () => ({ item: '', quantity: '', rate: '', taka: '' }))
     );
     const [tax, setTax] = useState("");
-    const [language, setLanguage] = useState('bn');
+    const [language, setLanguage] = useState('en');
     const olRef = useRef(null);
 
     const handleInputChange = (index, field, value) => {
@@ -78,11 +78,11 @@ const CashMemo = () => {
     };
 
     const toggleLanguage = () => {
-        setLanguage(language === 'bn' ? 'en' : 'bn' && language === 'en' ? 'bn' : 'en');
+        setLanguage(language === 'en' ? 'bn' : 'en' && language === 'bn' ? 'en' : 'bn');
     };
 
     const formatValue = (value) => {
-        return language === 'bn' ? convertToBangla(value) : convertToEnglish(value);
+        return language === 'en' ? convertToEnglish(value) : convertToBangla(value);
     };
 
     const downloadOlAsImage = async () => {
@@ -118,11 +118,11 @@ const CashMemo = () => {
 
     return (
         <div className="">
-            <Container className="flex flex-col justify-center  ">
+            <Container className="md:w-[700px] flex flex-col justify-center">
                 <div className="flex justify-end ">
                     <button
                         onClick={toggleLanguage}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                        className="md:absolute top-4 text-[12px] md:text-base right-4 bg-gray-500 text-white px-4 py-1 md:py-2 rounded-md"
                     >
                         {language === 'bn' ? 'English' : 'বাংলা'}
                     </button>
@@ -132,7 +132,7 @@ const CashMemo = () => {
                     <Header />
                     {items.map((row, index) => (
                         <li key={index}>
-                            <div className="md:w-full flex justify-between border-transparent shadow-md rounded-md md:px-2">
+                            <div className="md:w-full flex justify-between border-transparent shadow-md rounded-md px-2">
                                 <div className="w-4 text-center font-bold">{index + 1}.</div>
                                 {['item', 'quantity', 'rate', 'taka'].map((field, i) => (
                                     <div
@@ -141,10 +141,10 @@ const CashMemo = () => {
                                             } gap-y-0.5`}
                                     >
                                         {index === 0 && (
-                                            <div className='absolute -top-10  border-b-2 bg-slate-300 h-9 w-full text-center items-center'>
-                                                <label htmlFor={field} className="font-bold text-base capitalize text-blue-600 ">
+                                            <div className='absolute -top-9 md:-top-10 border-blue-600 border-b-2 bg-blue-100 h-7 md:h-9 w-full text-center items-center'>
+                                                <label htmlFor={field} className="font-bold text-[12px] md:text-base capitalize text-blue-600 ">
                                                     {language === 'bn'
-                                                        ? (field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা')
+                                                        ?(field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা')
                                                         : field.charAt(0).toUpperCase() + field.slice(1)}
                                                 </label>
                                             </div>
@@ -166,28 +166,28 @@ const CashMemo = () => {
                     ))}
 
                     <div className=''>
-                        <ul className='flex justify-between items-center pl-16 pr-2'>
-                            <div className='w-40 h-20 border border-dashed border-[#7c7c7c7c] flex justify-center items-center '>
+                        <ul className='flex justify-end md:justify-between md:items-center pl-16 pr-2'>
+                            <div className='hidden  md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] md:flex justify-center items-center '>
                                 <p className='text-sm text-[#7c7c7c7c]'>Seal and signature</p>
                             </div>
-                            <div className='flex items-center gap-x-6'>
-                                <div className='flex flex-col gap-y-6'>
-                                    <label htmlFor="tax" className='font-bold text-base text-black'>{language === 'bn' ? 'ট্যাক্স / জমা' : 'Tax / Deduction'}:</label>
-                                    <label htmlFor="#" className='font-bold text-base text-green-600'>{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</label>
-                                    <label htmlFor="#" className='font-bold text-base text-blue-600'>{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</label>
+                            <div className='flex items-center gap-x-3 md:gap-x-6'>
+                                <div className='flex flex-col gap-y-2 md:gap-y-4'>
+                                    <label htmlFor="tax" className='font-bold text-[12px] md:text-base text-black'>{language === 'bn' ? 'ট্যাক্স / জমা' : 'Tax / Deduction'}:</label>
+                                    <label htmlFor="#" className='font-bold text-[12px] md:text-base text-green-600'>{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</label>
+                                    <label htmlFor="#" className='font-bold text-[12px] md:text-base text-blue-600'>{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</label>
                                 </div>
-                                <div className='w-36 flex flex-col gap-2'>
+                                <div className='w-28 md:w-36 flex flex-col gap-y-1'>
                                 <input
                                     type="text"
                                     value={formatValue(tax)}
                                     onChange={(e) => handleTaxChange(e.target.value)}
-                                    className="w-36 outline-none bg-gray-100 px-4 py-2 rounded-md text-lg font-bold"
+                                    className="md:w-36 outline-none bg-gray-100 px-4 md:py-2 rounded-md md:text-lg font-bold"
                                 />
-                                    <li className="bg-gray-200 pl-4  py-2 rounded-md shadow-md">
+                                    <li className="bg-gray-200 pl-4  md:py-2 rounded-md shadow-md">
                                         {/* <span className="font-semibold">{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</span> */}
                                         <span className="text-green-600 font-bold">{formatValue(calculateTotalPrice())} ৳</span>
                                     </li>
-                                    <li className="items-center bg-gray-200 pl-4 py-2 rounded-md shadow-md">
+                                    <li className="items-center bg-gray-200 pl-4 md:py-2 rounded-md shadow-md">
                                         {/* <span className="font-semibold">{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</span> */}
                                         <span className="text-blue-600 font-bold">{formatValue(calculateNetPrice())} ৳</span>
                                     </li>
@@ -201,15 +201,15 @@ const CashMemo = () => {
                 <div className=''>
                     <button
                         onClick={addNewRow}
-                        className="w-full mt-1.5 bg-blue-500 text-white px-4 py-2  hover:bg-blue-600"
+                        className="w-full mt-2 md:mt-3 bg-blue-500 text-white px-4 py-1 md:py-2  hover:bg-blue-600"
                     >
                         {language === 'bn' ? 'রো যোগ করুন' : 'Add Row'}
                     </button>
 
-                    <div className="mt-3 flex justify-end gap-x-4">
+                    <div className="px-3 pb-3 mt-2 md:mt-2 flex justify-end gap-x-4">
                         <button
                             onClick={downloadOlAsImage}
-                            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                            className="bg-green-500 text-white px-4 py-1 md:py-2 rounded-md hover:bg-green-600"
                         >
                             {language === 'bn' ? 'ডাউনলোড করুন' : 'Download'}
                         </button>
@@ -218,7 +218,7 @@ const CashMemo = () => {
                                 const imageUrl = 'data:image/png;base64,...'; // toPng থেকে জেনারেট হওয়া ডেটা URL
                                 shareOnWhatsApp(imageUrl);
                             })}
-                            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                            className="bg-green-500 text-white px-4 py-1 md:py-2 rounded-md hover:bg-green-600"
                         >
                             {language === 'bn' ? 'শেয়ার করুন' : 'Share'}
                         </button>
