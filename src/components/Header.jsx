@@ -1,6 +1,19 @@
 import React from 'react'
 
 const Header = () => {
+
+
+    const day = new Date().toLocaleDateString("en-BG" , {
+        day: "2-digit",
+    });
+
+    const month = new Date().toLocaleDateString("en-BG" , {
+        month: "2-digit",
+    })
+    const year = new Date().toLocaleDateString("en-BG" , {
+        year: "numeric",
+    })
+
     return (
         <div className='pb-7 md:pb-8'>
             <div className='flex justify-between pt-2.5 px-3'>
@@ -36,9 +49,9 @@ const Header = () => {
                     <p className='md:text-lg text-[12px] font-semibold text-blue-600 md:font-bold'>Serial No : <span className='font-semibold'>0000000001</span></p>
                 </div>
                 <div className='flex'>
-                <div className='w-7 md:w-10 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-r-transparent border-[#7c7c7c] flex justify-center items-center'>05</div>
-                <div className='w-7 md:w-10 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-[#7c7c7c] flex justify-center items-center'>11</div>
-                <div className='w-10 md:w-20 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-l-transparent border-[#7c7c7c] flex justify-center items-center'>2024</div>
+                <div className='w-7 md:w-10 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-r-transparent border-[#7c7c7c] flex justify-center items-center'>{day}</div>
+                <div className='w-7 md:w-10 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-[#7c7c7c] flex justify-center items-center'>{month}</div>
+                <div className='w-10 md:w-20 h-5 md:h-8 text-blue-600 text-[10px] md:text-base border border-l-transparent border-[#7c7c7c] flex justify-center items-center'>{year}</div>
                 </div>
             </div>
                 <h1 className='text-[12px] md:text-xl text-center text-slate-100 bg-blue-500 py-1 md:py-2 shadow-lg'>Cash Memo</h1>

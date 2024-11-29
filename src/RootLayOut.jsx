@@ -1,12 +1,12 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
-// import NavbarLeft from './layer/NavbarLeft'
+import MenuBar from './layer/MenuBar'
 // import NavbarRight from './layer/NavvarRight'
 
 const RootLayOut = () => {
   return (
-    <div className="bg-[#bebebebe]">
-      {/* <NavbarLeft/> */}
+    <div className=" h-screen w-full">
+        <MenuBar/>
         <Outlet/>
       {/* <NavbarRight/> */}
     </div>

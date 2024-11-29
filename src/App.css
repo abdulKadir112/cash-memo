@@ -5,6 +5,7 @@
 }
 
 .placeholder-light {
-    color: #ccc;
+    color: #0a0a0a;
     font-style: italic;
+    font-weight: 600;
 }

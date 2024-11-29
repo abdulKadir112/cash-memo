@@ -7,34 +7,51 @@ import Header from './Header';
 
 const convertToBangla = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num.toString().split('').map(digit => banglaDigits[digit] || digit).join('');
+    return num
+        .toString()
+        .split('')
+        .map((digit) => banglaDigits[digit] || digit)
+        .join('');
 };
 
 const convertToEnglish = (num) => {
     const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    return num.toString().split('').map(digit => englishDigits[digit] || digit).join('');
+    return num
+        .toString()
+        .split('')
+        .map((digit) => englishDigits[digit] || digit)
+        .join('');
 };
 
-const CashMemo = () => {
+const CashMemo = ( {className}) => {
     const [items, setItems] = useState(
         Array.from({ length: 5 }, () => ({ item: '', quantity: '', rate: '', taka: '' }))
     );
-    const [tax, setTax] = useState("");
+    const [tax, setTax] = useState('');
     const [language, setLanguage] = useState('en');
     const olRef = useRef(null);
 
+    // Handle input changes
     const handleInputChange = (index, field, value) => {
         const updatedItems = [...items];
         const convertBanglaToEnglish = (num) => {
             const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
             const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-            return num.split('').map((char) =>
-                (banglaDigits.includes(char) ? englishDigits[banglaDigits.indexOf(char)] : char)).join('');
+            return num
+                .split('')
+                .map((char) =>
+                    banglaDigits.includes(char) ? englishDigits[banglaDigits.indexOf(char)] : char
+                )
+                .join('');
         };
 
-        const convertedValue = field === 'quantity' || field === 'rate' || field === 'taka' ? convertBanglaToEnglish(value) : value;
+        const convertedValue =
+            field === 'quantity' || field === 'rate' || field === 'taka'
+                ? convertBanglaToEnglish(value)
+                : value;
         updatedItems[index][field] = convertedValue;
 
+        // Calculate Taka
         const quantity = parseFloat(convertBanglaToEnglish(updatedItems[index].quantity)) || 0;
         const rate = parseFloat(convertBanglaToEnglish(updatedItems[index].rate)) || 0;
 
@@ -53,32 +70,35 @@ const CashMemo = () => {
     const addNewRow = () => {
         setItems([...items, { item: '', quantity: '', rate: '', taka: '' }]);
 
+        if(olRef.current){
+            olRef.current.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'end',
+            
+            });
+        }
     };
 
     const calculateTotalPrice = () => {
-        return items.reduce((total, row) => {
-            const quantity = parseFloat(row.quantity) || 0;
-            const rate = parseFloat(row.rate) || 0;
-            const taka = parseFloat(row.taka) || 0;
-
-            if (quantity === 0 && rate === 0 && taka > 0) {
+        return items
+            .reduce((total, row) => {
+                const taka = parseFloat(row.taka) || 0;
                 return total + taka;
-            } else if (quantity > 0 && rate > 0) {
-                return total + (quantity * rate);
-            }
-            return total;
-        }, 0).toFixed(2);
+            }, 0)
+            .toFixed(2);
     };
 
     const calculateNetPrice = () => {
         const totalPrice = parseFloat(calculateTotalPrice()) || 0;
         const taxValue = parseFloat(tax) || 0;
-        const netPrice = totalPrice - taxValue.toFixed(2) || 0;
-        return netPrice > 0 ? netPrice.toFixed(2) : '0.00';
+        const netPrice = totalPrice - taxValue;
+        
+        
+        return netPrice > 0 || netPrice < 0 ? netPrice.toFixed(2) : '0.00';
     };
 
     const toggleLanguage = () => {
-        setLanguage(language === 'en' ? 'bn' : 'en' && language === 'bn' ? 'en' : 'bn');
+        setLanguage((prevLanguage) => (prevLanguage === 'en' ? 'bn' : 'en'));
     };
 
     const formatValue = (value) => {
@@ -93,7 +113,7 @@ const CashMemo = () => {
                     input.classList.add('placeholder-light');
                 });
 
-                const options = { quality: 1, backgroundColor: '' };
+                const options = { quality: 2, backgroundColor: '' };
                 const dataUrl = await toPng(olRef.current, options);
 
                 saveAs(dataUrl, 'cash-memo.png');
@@ -117,7 +137,7 @@ const CashMemo = () => {
 
 
     return (
-        <div className="">
+        <div className={`${className}`}>
             <Container className="md:w-[700px] flex flex-col justify-center">
                 <div className="flex justify-end ">
                     <button
@@ -187,9 +207,9 @@ const CashMemo = () => {
                                         {/* <span className="font-semibold">{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</span> */}
                                         <span className="text-green-600 font-bold">{formatValue(calculateTotalPrice())} ৳</span>
                                     </li>
-                                    <li className="items-center bg-gray-200 pl-4 md:py-2 rounded-md shadow-md">
+                                    <li className={`items-center bg-gray-200 pl-4 md:py-2 rounded-md shadow-md text-blue-600 font-bold ${calculateNetPrice() < 0 ? 'text-red-600' : ''}`}>
                                         {/* <span className="font-semibold">{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</span> */}
-                                        <span className="text-blue-600 font-bold">{formatValue(calculateNetPrice())} ৳</span>
+                                        {formatValue(calculateNetPrice())} ৳
                                     </li>
                                 </div>
                             </div>
@@ -201,15 +221,15 @@ const CashMemo = () => {
                 <div className=''>
                     <button
                         onClick={addNewRow}
-                        className="w-full mt-2 md:mt-3 bg-blue-500 text-white px-4 py-1 md:py-2  hover:bg-blue-600"
+                        className="w-full  bg-blue-500 text-white px-4 py-1 md:py-4  hover:bg-blue-600"
                     >
                         {language === 'bn' ? 'রো যোগ করুন' : 'Add Row'}
                     </button>
 
-                    <div className="px-3 pb-3 mt-2 md:mt-2 flex justify-end gap-x-4">
+                    <div className=" pb-3 mt-2 md:mt-2 w-full flex justify-between">
                         <button
                             onClick={downloadOlAsImage}
-                            className="bg-green-500 text-white px-4 py-1 md:py-2 rounded-md hover:bg-green-600"
+                            className="w-full bg-green-500 text-white py-1 md:py-3  hover:bg-green-600"
                         >
                             {language === 'bn' ? 'ডাউনলোড করুন' : 'Download'}
                         </button>
@@ -218,7 +238,7 @@ const CashMemo = () => {
                                 const imageUrl = 'data:image/png;base64,...'; // toPng থেকে জেনারেট হওয়া ডেটা URL
                                 shareOnWhatsApp(imageUrl);
                             })}
-                            className="bg-green-500 text-white px-4 py-1 md:py-2 rounded-md hover:bg-green-600"
+                            className="w-full border-l-2 bg-green-500 text-white  py-1 md:py-3 hover:bg-green-600"
                         >
                             {language === 'bn' ? 'শেয়ার করুন' : 'Share'}
                         </button>
