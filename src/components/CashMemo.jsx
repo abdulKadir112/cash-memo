@@ -1,253 +1,260 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import Container from '../layer/Container';
-import '../App.css';
 import Header from './Header';
 
-const convertToBangla = (num) => {
-    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num
-        .toString()
-        .split('')
-        .map((digit) => banglaDigits[digit] || digit)
-        .join('');
+const BANGLA_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+const ENGLISH_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+const toBangla = (num) => {
+  if (!num && num !== 0) return '';
+  return String(num)
+    .split('')
+    .map(d => BANGLA_DIGITS[ENGLISH_DIGITS.indexOf(d)] || d)
+    .join('');
 };
 
-const convertToEnglish = (num) => {
-    const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    return num
-        .toString()
-        .split('')
-        .map((digit) => englishDigits[digit] || digit)
-        .join('');
+const toEnglish = (str) => {
+  if (!str) return '';
+  return String(str)
+    .split('')
+    .map(c => {
+      const idx = BANGLA_DIGITS.indexOf(c);
+      return idx !== -1 ? ENGLISH_DIGITS[idx] : c;
+    })
+    .join('');
 };
 
-const CashMemo = ( {className}) => {
-    const [items, setItems] = useState(
-        Array.from({ length: 5 }, () => ({ item: '', quantity: '', rate: '', taka: '' }))
-    );
-    const [tax, setTax] = useState('');
-    const [language, setLanguage] = useState('en');
-    const olRef = useRef(null);
+const CashMemo = ({ className = "" }) => {
+  const [items, setItems] = useState(
+    Array.from({ length: 5 }, () => ({ item: '', qty: '', rate: '', amount: '' }))
+  );
+  const [taxDeduction, setTaxDeduction] = useState('');
+  const [lang, setLang] = useState('bn'); // 'bn' or 'en'
+  const olRef = useRef(null);
+  const lastInputRef = useRef(null);
 
-    // Handle input changes
-    const handleInputChange = (index, field, value) => {
-        const updatedItems = [...items];
-        const convertBanglaToEnglish = (num) => {
-            const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-            const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-            return num
-                .split('')
-                .map((char) =>
-                    banglaDigits.includes(char) ? englishDigits[banglaDigits.indexOf(char)] : char
-                )
-                .join('');
-        };
+  const isBn = lang === 'bn';
 
-        const convertedValue =
-            field === 'quantity' || field === 'rate' || field === 'taka'
-                ? convertBanglaToEnglish(value)
-                : value;
-        updatedItems[index][field] = convertedValue;
+  const addRow = () => {
+    setItems(prev => [...prev, { item: '', qty: '', rate: '', amount: '' }]);
+  };
 
-        // Calculate Taka
-        const quantity = parseFloat(convertBanglaToEnglish(updatedItems[index].quantity)) || 0;
-        const rate = parseFloat(convertBanglaToEnglish(updatedItems[index].rate)) || 0;
+  const handleChange = (index, field, value) => {
+    const englishValue = toEnglish(value);
 
-        if (field === 'quantity' || field === 'rate') {
-            updatedItems[index].taka = quantity > 0 && rate > 0 ? (quantity * rate).toFixed(2) : '';
-        }
+    // Allow only numbers + decimal in numeric fields
+    if (['qty', 'rate', 'amount'].includes(field)) {
+      if (value !== '' && !/^\d*\.?\d*$/.test(englishValue)) return;
+    }
 
-        setItems(updatedItems);
-    };
+    const updated = [...items];
+    updated[index][field] = englishValue;
 
-    const handleTaxChange = (value) => {
-        const englishValue = convertToEnglish(value);
-        setTax(englishValue);
-    };
+    // Auto-calculate amount
+    if (field === 'qty' || field === 'rate') {
+      const qty = parseFloat(updated[index].qty) || 0;
+      const rate = parseFloat(updated[index].rate) || 0;
+      updated[index].amount = qty > 0 && rate > 0 ? (qty * rate).toFixed(2) : '';
+    }
 
-    const addNewRow = () => {
-        setItems([...items, { item: '', quantity: '', rate: '', taka: '' }]);
+    setItems(updated);
+  };
 
-        if(olRef.current){
-            olRef.current.scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'end',
-            
-            });
-        }
-    };
+  const total = items.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const deduction = parseFloat(toEnglish(taxDeduction)) || 0;
+  const net = total - deduction;
 
-    const calculateTotalPrice = () => {
-        return items
-            .reduce((total, row) => {
-                const taka = parseFloat(row.taka) || 0;
-                return total + taka;
-            }, 0)
-            .toFixed(2);
-    };
+  const format = (val) => (isBn ? toBangla(val) : val);
 
-    const calculateNetPrice = () => {
-        const totalPrice = parseFloat(calculateTotalPrice()) || 0;
-        const taxValue = parseFloat(tax) || 0;
-        const netPrice = totalPrice - taxValue;
-        
-        
-        return netPrice > 0 || netPrice < 0 ? netPrice.toFixed(2) : '0.00';
-    };
+  const downloadAsImage = async () => {
+    if (!olRef.current) return;
 
-    const toggleLanguage = () => {
-        setLanguage((prevLanguage) => (prevLanguage === 'en' ? 'bn' : 'en'));
-    };
+    try {
+      // Temporarily hide placeholders for clean image
+      const inputs = olRef.current.querySelectorAll('input');
+      inputs.forEach(el => el.classList.add('no-placeholder'));
 
-    const formatValue = (value) => {
-        return language === 'en' ? convertToEnglish(value) : convertToBangla(value);
-    };
+      const dataUrl = await toPng(olRef.current, {
+        quality: 0.95,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+      });
 
-    const downloadOlAsImage = async () => {
-        if (olRef.current) {
-            try {
-                const inputs = olRef.current.querySelectorAll('input');
-                inputs.forEach(input => {
-                    input.classList.add('placeholder-light');
-                });
+      saveAs(dataUrl, 'cash-memo.png');
 
-                const options = { quality: 2, backgroundColor: '' };
-                const dataUrl = await toPng(olRef.current, options);
+      // Restore
+      inputs.forEach(el => el.classList.remove('no-placeholder'));
 
-                saveAs(dataUrl, 'cash-memo.png');
+      alert(isBn ? 'ইমেজ সফলভাবে সেভ হয়েছে!' : 'Image saved successfully!');
+      
+      return dataUrl; // for WhatsApp share
+    } catch (err) {
+      console.error(err);
+      alert(isBn ? 'ইমেজ তৈরি করতে সমস্যা হয়েছে।' : 'Failed to create image.');
+    }
+  };
 
-                inputs.forEach(input => {
-                    input.classList.remove('placeholder-light');
-                });
+  const shareToWhatsApp = async () => {
+    const dataUrl = await downloadAsImage();
+    if (!dataUrl) return;
 
-                alert(language === 'bn' ? 'ইমেজ সফলভাবে ডাউনলোড হয়েছে।' : 'Image downloaded successfully.');
-            } catch (error) {
-                console.error('Could not generate image', error);
-                alert(language === 'bn' ? 'ইমেজ ডাউনলোড ব্যর্থ।' : 'Image download failed.');
-            }
-        }
-    };
+    const text = isBn
+      ? `নগদ মেমো\nমোট: ${toBangla(total.toFixed(2))} ৳\nনেট: ${toBangla(net.toFixed(2))} ৳`
+      : `Cash Memo\nTotal: ${total.toFixed(2)} ৳\nNet: ${net.toFixed(2)} ৳`;
 
-    const shareOnWhatsApp = (imageUrl) => {
-        const encodedUrl = encodeURIComponent(imageUrl);
-        window.open(`https://wa.me/?text=${encodedUrl}`, '_blank');
-    };
+    const encodedText = encodeURIComponent(text);
+    const encodedImage = encodeURIComponent(dataUrl);
 
+    window.open(`https://wa.me/?text=${encodedText}%0A${encodedImage}`, '_blank');
+  };
 
-    return (
-        <div className={`${className}`}>
-            <Container className="md:w-[700px] flex flex-col justify-center">
-                <div className="flex justify-end ">
-                    <button
-                        onClick={toggleLanguage}
-                        className="md:absolute top-4 text-[12px] md:text-base right-4 bg-gray-500 text-white px-4 py-1 md:py-2 rounded-md"
-                    >
-                        {language === 'bn' ? 'English' : 'বাংলা'}
-                    </button>
-                </div>
+  // Auto focus last row's item input when adding new row
+  useEffect(() => {
+    if (lastInputRef.current) {
+      lastInputRef.current.focus();
+    }
+  }, [items.length]);
 
-                <ol ref={olRef} className=" flex flex-col gap-y-4 pb-5 bg-orange-200 ">
-                    <Header />
-                    {items.map((row, index) => (
-                        <li key={index}>
-                            <div className="md:w-full flex justify-between border-transparent shadow-md rounded-md px-2">
-                                <div className="w-4 text-center font-bold">{index + 1}.</div>
-                                {['item', 'quantity', 'rate', 'taka'].map((field, i) => (
-                                    <div
-                                        key={i}
-                                        className={`relative flex flex-col ${field === 'item' ? 'md:w-56 w-28' : field === 'quantity' ? 'md:w-28 w-16' : 'md:w-36 w-16'
-                                            } gap-y-0.5`}
-                                    >
-                                        {index === 0 && (
-                                            <div className='absolute -top-9 md:-top-10 border-blue-600 border-b-2 bg-blue-100 h-7 md:h-9 w-full text-center items-center'>
-                                                <label htmlFor={field} className="font-bold text-[12px] md:text-base capitalize text-blue-600 ">
-                                                    {language === 'bn'
-                                                        ?(field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা')
-                                                        : field.charAt(0).toUpperCase() + field.slice(1)}
-                                                </label>
-                                            </div>
-                                        )}
-                                        <input
-                                            name={field}
-                                            type="text"
-                                            placeholder={language === 'bn'
-                                                ? (field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা')
-                                                : field.charAt(0).toUpperCase() + field.slice(1)}
-                                            value={formatValue(row[field])}
-                                            onChange={(e) => handleInputChange(index, field, e.target.value)}
-                                            className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm placeholder:text-sm"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </li>
-                    ))}
+  return (
+    <div className={`min-h-screen bg-gray-50 py-6 ${className}`}>
+      <Container className="max-w-2xl mx-auto px-3 md:px-0">
 
-                    <div className=''>
-                        <ul className='flex justify-end md:justify-between md:items-center pl-16 pr-2'>
-                            <div className='hidden  md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] md:flex justify-center items-center '>
-                                <p className='text-sm text-[#7c7c7c7c]'>Seal and signature</p>
-                            </div>
-                            <div className='flex items-center gap-x-3 md:gap-x-6'>
-                                <div className='flex flex-col gap-y-2 md:gap-y-4'>
-                                    <label htmlFor="tax" className='font-bold text-[12px] md:text-base text-black'>{language === 'bn' ? 'ট্যাক্স / জমা' : 'Tax / Deduction'}:</label>
-                                    <label htmlFor="#" className='font-bold text-[12px] md:text-base text-green-600'>{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</label>
-                                    <label htmlFor="#" className='font-bold text-[12px] md:text-base text-blue-600'>{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</label>
-                                </div>
-                                <div className='w-28 md:w-36 flex flex-col gap-y-1'>
-                                <input
-                                    type="text"
-                                    value={formatValue(tax)}
-                                    onChange={(e) => handleTaxChange(e.target.value)}
-                                    className="md:w-36 outline-none bg-gray-100 px-4 md:py-2 rounded-md md:text-lg font-bold"
-                                />
-                                    <li className="bg-gray-200 pl-4  md:py-2 rounded-md shadow-md">
-                                        {/* <span className="font-semibold">{language === 'bn' ? 'মোট মূল্য' : 'Total Price'}:</span> */}
-                                        <span className="text-green-600 font-bold">{formatValue(calculateTotalPrice())} ৳</span>
-                                    </li>
-                                    <li className={`items-center bg-gray-200 pl-4 md:py-2 rounded-md shadow-md text-blue-600 font-bold ${calculateNetPrice() < 0 ? 'text-red-600' : ''}`}>
-                                        {/* <span className="font-semibold">{language === 'bn' ? 'নেট মূল্য' : 'Net Price'}:</span> */}
-                                        {formatValue(calculateNetPrice())} ৳
-                                    </li>
-                                </div>
-                            </div>
-                        </ul>
-                    </div>
-
-                </ol>
-
-                <div className=''>
-                    <button
-                        onClick={addNewRow}
-                        className="w-full  bg-blue-500 text-white px-4 py-1 md:py-4  hover:bg-blue-600"
-                    >
-                        {language === 'bn' ? 'রো যোগ করুন' : 'Add Row'}
-                    </button>
-
-                    <div className=" pb-3 mt-2 md:mt-2 w-full flex justify-between">
-                        <button
-                            onClick={downloadOlAsImage}
-                            className="w-full bg-green-500 text-white py-1 md:py-3  hover:bg-green-600"
-                        >
-                            {language === 'bn' ? 'ডাউনলোড করুন' : 'Download'}
-                        </button>
-                        <button
-                            onClick={() => downloadOlAsImage().then(() => {
-                                const imageUrl = 'data:image/png;base64,...'; // toPng থেকে জেনারেট হওয়া ডেটা URL
-                                shareOnWhatsApp(imageUrl);
-                            })}
-                            className="w-full border-l-2 bg-green-500 text-white  py-1 md:py-3 hover:bg-green-600"
-                        >
-                            {language === 'bn' ? 'শেয়ার করুন' : 'Share'}
-                        </button>
-
-                    </div>
-                </div>
-            </Container>
+        {/* Language Toggle */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setLang(prev => prev === 'bn' ? 'en' : 'bn')}
+            className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition"
+          >
+            {isBn ? 'English' : 'বাংলা'}
+          </button>
         </div>
-    );
+
+        {/* Memo Paper */}
+        <div
+          ref={olRef}
+          className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200 p-5 md:p-8"
+          style={{ minHeight: '600px' }}
+        >
+          <Header />
+
+          {/* Items Table */}
+          <div className="mt-6 space-y-3">
+            {items.map((row, i) => (
+              <div key={i} className="flex items-center gap-2 md:gap-4">
+                <div className="w-8 md:w-10 text-center font-bold text-gray-700">
+                  {isBn ? toBangla(i + 1) : i + 1}.
+                </div>
+
+                <input
+                  ref={i === items.length - 1 ? lastInputRef : null}
+                  type="text"
+                  placeholder={isBn ? 'পণ্যের নাম' : 'Item name'}
+                  value={isBn ? row.item : row.item}
+                  onChange={e => handleChange(i, 'item', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+
+                <input
+                  type="text"
+                  placeholder={isBn ? 'পরিমাণ' : 'Qty'}
+                  value={format(row.qty)}
+                  onChange={e => handleChange(i, 'qty', e.target.value)}
+                  className="w-20 md:w-24 px-2 py-2 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+
+                <input
+                  type="text"
+                  placeholder={isBn ? 'দর' : 'Rate'}
+                  value={format(row.rate)}
+                  onChange={e => handleChange(i, 'rate', e.target.value)}
+                  className="w-24 md:w-28 px-2 py-2 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+
+                <div className="w-28 md:w-32 px-2 py-2 bg-gray-100 rounded text-right font-medium text-green-700">
+                  {row.amount ? `${format(row.amount)} ৳` : '—'}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals Section */}
+          <div className="mt-8 border-t-2 border-gray-300 pt-5">
+            <div className="flex justify-end items-center gap-4">
+              <div className="text-right space-y-3">
+                <div className="font-bold text-gray-700">
+                  {isBn ? 'ট্যাক্স / জমা / ছাড় :' : 'Tax / Deduction :'}
+                </div>
+                <div className="font-bold text-green-700 text-lg">
+                  {isBn ? 'মোট মূল্য :' : 'Total Amount :'}
+                </div>
+                <div className={`font-bold text-xl ${net < 0 ? 'text-red-600' : 'text-blue-700'}`}>
+                  {isBn ? 'নেট মূল্য :' : 'Net Amount :'}
+                </div>
+              </div>
+
+              <div className="w-40 space-y-3">
+                <input
+                  type="text"
+                  value={format(taxDeduction)}
+                  onChange={e => setTaxDeduction(toEnglish(e.target.value))}
+                  placeholder={isBn ? '০.০০' : '0.00'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-right font-bold focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+
+                <div className="px-3 py-2 bg-green-50 text-green-800 font-bold text-right rounded">
+                  {format(total.toFixed(2))} ৳
+                </div>
+
+                <div className={`px-3 py-2 font-bold text-right rounded text-xl ${net < 0 ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-800'}`}>
+                  {format(net.toFixed(2))} ৳
+                </div>
+              </div>
+            </div>
+
+            {/* Signature area */}
+            <div className="mt-10 flex justify-end">
+              <div className="w-48 h-20 border-2 border-dashed border-gray-400 rounded flex items-end justify-center pb-2 text-gray-500 text-sm">
+                {isBn ? 'স্বাক্ষর ও সিল' : 'Signature & Seal'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={addRow}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+          >
+            {isBn ? '+ আরও পণ্য যোগ করুন' : '+ Add Row'}
+          </button>
+
+          <button
+            onClick={downloadAsImage}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium transition"
+          >
+            {isBn ? 'ডাউনলোড (PNG)' : 'Download PNG'}
+          </button>
+
+          <button
+            onClick={shareToWhatsApp}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition"
+          >
+            {isBn ? 'হোয়াটসঅ্যাপে শেয়ার' : 'Share on WhatsApp'}
+          </button>
+        </div>
+      </Container>
+
+      {/* Add this to App.css or component */}
+      <style jsx>{`
+        .no-placeholder::placeholder {
+          color: transparent !important;
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default CashMemo;

@@ -22,7 +22,7 @@ const Header = () => {
                 <p className='text-center text-[10px] md:text-sm font-normal text-blue-600 tracking-widest'>our commitment</p>
             </div>
             <div className='flex justify-center shadow-lg md:py-4 py-2'>
-                <h1 className='font-bold text-blue-600 text-xl md:text-4xl'>Your company / store name</h1>
+                <h1 className='font-bold text-blue-600 text-xl md:text-4xl'>ভিশন ফ্লো সার্ভিসেস লিমিটেড</h1>
             </div>
             <div className='flex justify-between bg-[#9b9b9b2c] shadow-md px-3 py-2'>
                 <div className='flex  items-center gap-x-2 md:gap-x-5'>
@@ -38,9 +38,9 @@ const Header = () => {
                     </div>
                 </div>
                 <div className='w-80 text-end'>
-                    <p className='font-semibold text-blue-600 text-[12px] md:text-lg '>House # 01, Road # 01, Block # 01, Sector # 01, Uttara, Dhaka</p>
-                    <p className='md:font-bold text-sm md:text-lg text-blue-400'>Phone: 01xxxxxxxxx</p>
-                    <p className='md:font-bold text-sm md:text-lg text-blue-400'>Fax: 01xxxxxxxxx</p>
+                    <p className='font-semibold text-blue-600 text-[12px] md:text-lg '>হেমায়েতপুর বটতলা বাজার দামুড়হুদা, চুয়াডাঙ্গা</p>
+                    <p className='md:font-bold text-sm md:text-lg text-blue-400'>Phone: ০১৭২৯-৬২৮৪০২</p>
+                    <p className='md:font-bold text-sm md:text-lg text-blue-400'>Fax: ০১৯১৪-৬৬৫৯৪৬</p>
                     <p className='md:font-bold text-[10px] md:text-sm text-blue-400'>Website: www.example.com</p>
                 </div>
             </div>
