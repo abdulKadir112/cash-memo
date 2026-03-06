@@ -9,3 +9,13 @@
     font-style: italic;
     font-weight: 600;
 }
+.placeholder-light::placeholder {
+    opacity: 0.4;          /* 0.3 থেকে 0.5 এর মধ্যে রাখলে সুন্দর লাগে */
+    color: #666;           /* চাইলে হালকা ধূসরও করতে পারো */
+  }
+  
+  /* অথবা আরো নরম করতে চাইলে:
+  .placeholder-light::placeholder {
+    opacity: 0.35;
+    color: rgba(0, 0, 0, 0.4);
+  } */
