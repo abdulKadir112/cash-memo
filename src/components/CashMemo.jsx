@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import Container from '../layer/Container';
@@ -33,7 +33,7 @@ const CashMemo = ({ className }) => {
   );
   const [tax, setTax] = useState('');
   const olRef = useRef(null);
-  const bottomRef = useRef(null);
+  const lastRowRef = useRef(null);
 
   const isRowEmpty = (index) => {
     const row = items[index];
@@ -67,7 +67,20 @@ const CashMemo = ({ className }) => {
   };
 
   const addNewRow = () => {
-    setItems([...items, { item: '', quantity: '', rate: '', taka: '' }]);
+    setItems((prevItems) => {
+      const newItems = [...prevItems, { item: '', quantity: '', rate: '', taka: '' }];
+
+      setTimeout(() => {
+        if (lastRowRef.current) {
+          lastRowRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+      }, 100);
+
+      return newItems;
+    });
   };
 
   const removeRow = (index) => {
@@ -100,46 +113,54 @@ const CashMemo = ({ className }) => {
     if (!olRef.current) return;
 
     try {
-      // × বাটন লুকানো
+      // remove button লুকানো
       const removeBtns = olRef.current.querySelectorAll('[data-remove-btn]');
-      removeBtns.forEach(btn => (btn.style.display = 'none'));
+      removeBtns.forEach((btn) => (btn.style.display = 'none'));
 
-      // placeholder fix
+      // সব input
       const inputs = olRef.current.querySelectorAll('input');
-      inputs.forEach(input => input.classList.add('placeholder-light'));
+
+      // placeholder হালকা করা (শুধু placeholder, value এর রং বদলাবে না)
+      inputs.forEach((input) => {
+        input.classList.add('placeholder-light-download');
+      });
+
+      // স্টাইল apply হওয়ার জন্য ছোট অপেক্ষা
+      await new Promise((resolve) => setTimeout(resolve, 80));
 
       const dataUrl = await toPng(olRef.current, {
-        quality: 2,
-        backgroundColor: '',
+        quality: 0.98,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
       });
 
       saveAs(dataUrl, 'cash-memo.png');
 
       // cleanup
-      inputs.forEach(input => input.classList.remove('placeholder-light'));
-      removeBtns.forEach(btn => (btn.style.display = ''));
+      inputs.forEach((input) => {
+        input.classList.remove('placeholder-light-download');
+      });
+
+      removeBtns.forEach((btn) => (btn.style.display = ''));
 
       alert('ইমেজ সফলভাবে ডাউনলোড হয়েছে।');
     } catch (error) {
-      console.error('Image error:', error);
-      alert('ইমেজ ডাউনলোড ব্যর্থ হয়েছে।');
+      console.error('Image download error:', error);
+      alert('ইমেজ ডাউনলোড করতে সমস্যা হয়েছে।');
     }
   };
 
-  useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-  }, [items]);
-
   return (
     <div className={`${className}`}>
-      <Container className="md:w-[700px] flex flex-col justify-center">
-        <ol ref={olRef} className="flex flex-col gap-y-4 pb-2 bg-orange-200">
+      <Container className="md:w-[700px] flex flex-col">
+        <ol ref={olRef} className="flex flex-col gap-y-4 pb-40 bg-orange-200">
           <Header />
 
           {items.map((row, index) => (
-            <li key={index}>
+            <li
+              key={index}
+              ref={index === items.length - 1 ? lastRowRef : null}
+            >
               <div className="md:w-full flex justify-between border-transparent shadow-md rounded-md px-2">
                 <div className="w-4 text-center font-bold">{convertToBangla(index + 1)}.</div>
 
@@ -163,7 +184,7 @@ const CashMemo = ({ className }) => {
                       placeholder={field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা'}
                       value={formatValue(row[field])}
                       onChange={(e) => handleInputChange(index, field, e.target.value)}
-                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm placeholder:text-sm"
+                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm text-black placeholder:text-gray-400 placeholder:text-sm"
                     />
                   </div>
                 ))}
@@ -198,7 +219,7 @@ const CashMemo = ({ className }) => {
                 type="text"
                 value={formatValue(tax)}
                 onChange={(e) => handleTaxChange(e.target.value)}
-                className="md:w-36 outline-none bg-gray-100 px-4 md:py-2 rounded-md md:text-lg font-bold"
+                className="md:w-36 outline-none bg-gray-100 px-4 md:py-2 rounded-md md:text-lg font-bold text-black placeholder:text-gray-500"
               />
               <div className="bg-gray-200 pl-4 md:py-2 rounded-md shadow-md text-green-600 font-bold">
                 {formatValue(calculateTotalPrice())} ৳
@@ -208,37 +229,36 @@ const CashMemo = ({ className }) => {
               </div>
             </div>
           </div>
-
-          <div ref={bottomRef} className="h-px" />
         </ol>
 
-        {/* Add Row Button */}
-        <div className="mt-4">
-          <button
-            onClick={addNewRow}
-            className="w-full bg-blue-500 text-white px-4 py-2 md:py-3 hover:bg-blue-600 rounded-md"
-          >
-            রো যোগ করুন
-          </button>
-        </div>
+        {/* Fixed bottom buttons */}
+        <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-[700px] w-full bg-orange-200 z-10 p-4 flex flex-col gap-2">
+          <div>
+            <button
+              onClick={addNewRow}
+              className="w-full bg-blue-500 text-white px-4 py-2 md:py-3 hover:bg-blue-600 rounded-md"
+            >
+              রো যোগ করুন
+            </button>
+          </div>
 
-        {/* Download / Share Buttons */}
-        <div className="pb-3 mt-2 md:mt-2 w-full flex gap-2">
-          <button
-            onClick={downloadOlAsImage}
-            className="flex-1 bg-green-500 text-white py-2 md:py-3 hover:bg-green-600 rounded-md"
-          >
-            ডাউনলোড করুন
-          </button>
-          <button
-            onClick={() => {
-              downloadOlAsImage();
-              alert('প্রথমে ডাউনলোড করে ছবিটি WhatsApp-এ শেয়ার করুন');
-            }}
-            className="flex-1 bg-green-500 text-white py-2 md:py-3 hover:bg-green-600 rounded-md"
-          >
-            শেয়ার করুন
-          </button>
+          <div className="w-full flex gap-2">
+            <button
+              onClick={downloadOlAsImage}
+              className="flex-1 bg-green-500 text-white py-2 md:py-3 hover:bg-green-600 rounded-md"
+            >
+              ডাউনলোড করুন
+            </button>
+            <button
+              onClick={() => {
+                downloadOlAsImage();
+                alert('প্রথমে ডাউনলোড করে ছবিটি WhatsApp-এ শেয়ার করুন');
+              }}
+              className="flex-1 bg-green-500 text-white py-2 md:py-3 hover:bg-green-600 rounded-md"
+            >
+              শেয়ার করুন
+            </button>
+          </div>
         </div>
       </Container>
     </div>
