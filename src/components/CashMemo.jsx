@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import Container from '../layer/Container';
@@ -32,8 +32,46 @@ const CashMemo = ({ className }) => {
     Array.from({ length: 5 }, () => ({ item: '', quantity: '', rate: '', taka: '' }))
   );
   const [tax, setTax] = useState('');
+  const [availableItems, setAvailableItems] = useState([]);
+
+  // প্রত্যেক রো-এর জন্য আলাদা সাজেশন
+  const [rowSuggestions, setRowSuggestions] = useState(
+    Array.from({ length: 5 }, () => [])
+  );
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(
+    Array.from({ length: 5 }, () => -1)
+  );
+
   const olRef = useRef(null);
   const lastRowRef = useRef(null);
+
+  // JSON লোড + ডুপ্লিকেট রিমুভ
+  useEffect(() => {
+    fetch('/item.json')  // ফাইলের নাম যদি items.json হয় তাহলে '/items.json' করো
+      .then((response) => {
+        if (!response.ok) {
+          console.warn('item.json পাওয়া যায়নি বা লোড হয়নি → স্ট্যাটাস:', response.status);
+          return [];
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const unique = [...new Set(data)];
+          setAvailableItems(unique);
+          console.log("লোড হওয়া আইটেম:", unique); // ডিবাগের জন্য
+        } else {
+          setAvailableItems([]);
+        }
+      })
+      .catch((error) => {
+        console.warn('JSON লোড সম্পূর্ণ ব্যর্থ:', error);
+        setAvailableItems([]);
+      });
+  }, []);
+
+  // formatValue ফাংশন — এটা অবশ্যই থাকতে হবে
+  const formatValue = (value) => (value ? convertToBangla(value) : '');
 
   const isRowEmpty = (index) => {
     const row = items[index];
@@ -55,11 +93,68 @@ const CashMemo = ({ className }) => {
 
     updatedItems[index][field] = convertedValue;
 
+    if (field === 'item') {
+      const searchTerm = convertedValue.trim();
+
+      // খালি হলে সাজেশন দেখাবে না
+      if (searchTerm === '') {
+        const newSuggestions = [...rowSuggestions];
+        newSuggestions[index] = [];
+        setRowSuggestions(newSuggestions);
+        return;
+      }
+
+      // যেকোনো অংশে মিললে দেখাবে (case-insensitive)
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = availableItems.filter((item) => {
+        return item.toLowerCase().includes(searchLower);
+      });
+
+      const newSuggestions = [...rowSuggestions];
+      newSuggestions[index] = filtered;
+      setRowSuggestions(newSuggestions);
+
+      const newActive = [...activeSuggestionIndex];
+      newActive[index] = -1;
+      setActiveSuggestionIndex(newActive);
+    }
+
     const quantity = parseFloat(convertBanglaToEnglish(updatedItems[index].quantity)) || 0;
     const rate = parseFloat(convertBanglaToEnglish(updatedItems[index].rate)) || 0;
     updatedItems[index].taka = quantity > 0 && rate > 0 ? (quantity * rate).toFixed(2) : '';
 
     setItems(updatedItems);
+  };
+
+  const handleSuggestionClick = (rowIndex, selectedItem) => {
+    const updatedItems = [...items];
+    updatedItems[rowIndex].item = selectedItem;
+
+    const newSuggestions = [...rowSuggestions];
+    newSuggestions[rowIndex] = [];
+    setRowSuggestions(newSuggestions);
+
+    setItems(updatedItems);
+  };
+
+  const handleKeyDown = (e, rowIndex) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const newActive = [...activeSuggestionIndex];
+      newActive[rowIndex] = Math.min(
+        newActive[rowIndex] + 1,
+        rowSuggestions[rowIndex].length - 1
+      );
+      setActiveSuggestionIndex(newActive);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const newActive = [...activeSuggestionIndex];
+      newActive[rowIndex] = Math.max(newActive[rowIndex] - 1, -1);
+      setActiveSuggestionIndex(newActive);
+    } else if (e.key === 'Enter' && activeSuggestionIndex[rowIndex] >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(rowIndex, rowSuggestions[rowIndex][activeSuggestionIndex[rowIndex]]);
+    }
   };
 
   const handleTaxChange = (value) => {
@@ -69,6 +164,9 @@ const CashMemo = ({ className }) => {
   const addNewRow = () => {
     setItems((prevItems) => {
       const newItems = [...prevItems, { item: '', quantity: '', rate: '', taka: '' }];
+
+      setRowSuggestions((prev) => [...prev, []]);
+      setActiveSuggestionIndex((prev) => [...prev, -1]);
 
       setTimeout(() => {
         if (lastRowRef.current) {
@@ -93,6 +191,9 @@ const CashMemo = ({ className }) => {
       return;
     }
     setItems(items.filter((_, i) => i !== index));
+
+    setRowSuggestions((prev) => prev.filter((_, i) => i !== index));
+    setActiveSuggestionIndex((prev) => prev.filter((_, i) => i !== index));
   };
 
   const calculateTotalPrice = () => {
@@ -107,25 +208,18 @@ const CashMemo = ({ className }) => {
     return (total - joma).toFixed(2);
   };
 
-  const formatValue = (value) => (value ? convertToBangla(value) : '');
-
   const downloadOlAsImage = async () => {
     if (!olRef.current) return;
 
     try {
-      // remove button লুকানো
       const removeBtns = olRef.current.querySelectorAll('[data-remove-btn]');
       removeBtns.forEach((btn) => (btn.style.display = 'none'));
 
-      // সব input
       const inputs = olRef.current.querySelectorAll('input');
-
-      // placeholder হালকা করা (শুধু placeholder, value এর রং বদলাবে না)
       inputs.forEach((input) => {
         input.classList.add('placeholder-light-download');
       });
 
-      // স্টাইল apply হওয়ার জন্য ছোট অপেক্ষা
       await new Promise((resolve) => setTimeout(resolve, 80));
 
       const dataUrl = await toPng(olRef.current, {
@@ -136,7 +230,6 @@ const CashMemo = ({ className }) => {
 
       saveAs(dataUrl, 'cash-memo.png');
 
-      // cleanup
       inputs.forEach((input) => {
         input.classList.remove('placeholder-light-download');
       });
@@ -178,14 +271,37 @@ const CashMemo = ({ className }) => {
                         </label>
                       </div>
                     )}
+
                     <input
                       name={field}
                       type="text"
                       placeholder={field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা'}
                       value={formatValue(row[field])}
                       onChange={(e) => handleInputChange(index, field, e.target.value)}
-                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm px-2 md:px-3 md:rounded-md md:text-base text-sm text-black placeholder:text-gray-400 placeholder:text-sm"
+                      onKeyDown={(e) => field === 'item' ? handleKeyDown(e, index) : null}
+                      onBlur={() => {
+                        const newSuggestions = [...rowSuggestions];
+                        newSuggestions[index] = [];
+                        setRowSuggestions(newSuggestions);
+                      }}
+                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm text-black placeholder:text-gray-400 placeholder:text-sm"
                     />
+
+                    {field === 'item' && rowSuggestions[index]?.length > 0 && (
+                      <ul className="absolute z-10 bg-white border border-gray-300 w-full max-h-48 overflow-y-auto mt-10 rounded-md shadow-lg">
+                        {rowSuggestions[index].map((sug, sugIndex) => (
+                          <li
+                            key={sug}
+                            onClick={() => handleSuggestionClick(index, sug)}
+                            className={`px-4 py-2 cursor-pointer hover:bg-blue-50 ${
+                              sugIndex === activeSuggestionIndex[index] ? 'bg-blue-100 font-medium' : ''
+                            }`}
+                          >
+                            {sug}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
 
@@ -206,7 +322,7 @@ const CashMemo = ({ className }) => {
 
           {/* Total / Net / Tax */}
           <div className="flex justify-end md:justify-between items-start pl-16 pr-2 mt-4 gap-x-6">
-            <div className=" md:flex md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] justify-center items-center">
+            <div className="hidden md:flex md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] justify-center items-center">
               <p className="text-sm text-[#7c7c7c7c]">সীল ও স্বাক্ষর</p>
             </div>
             <div className="flex flex-col gap-y-2 md:gap-y-4">
