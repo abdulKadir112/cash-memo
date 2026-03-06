@@ -184,7 +184,7 @@ const CashMemo = ({ className }) => {
                       placeholder={field === 'item' ? 'পণ্য' : field === 'quantity' ? 'পরিমাণ' : field === 'rate' ? 'দাম' : 'টাকা'}
                       value={formatValue(row[field])}
                       onChange={(e) => handleInputChange(index, field, e.target.value)}
-                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm md:px-3 md:rounded-md md:text-base text-sm text-black placeholder:text-gray-400 placeholder:text-sm"
+                      className="bg-[#f5f5f533] outline-none md:py-2 rounded-sm px-2 md:px-3 md:rounded-md md:text-base text-sm text-black placeholder:text-gray-400 placeholder:text-sm"
                     />
                   </div>
                 ))}
@@ -206,7 +206,7 @@ const CashMemo = ({ className }) => {
 
           {/* Total / Net / Tax */}
           <div className="flex justify-end md:justify-between items-start pl-16 pr-2 mt-4 gap-x-6">
-            <div className="hidden md:flex md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] justify-center items-center">
+            <div className=" md:flex md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] justify-center items-center">
               <p className="text-sm text-[#7c7c7c7c]">সীল ও স্বাক্ষর</p>
             </div>
             <div className="flex flex-col gap-y-2 md:gap-y-4">
