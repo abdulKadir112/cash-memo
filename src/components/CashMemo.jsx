@@ -47,10 +47,10 @@ const CashMemo = ({ className }) => {
 
   // JSON লোড + ডুপ্লিকেট রিমুভ
   useEffect(() => {
-    fetch('/item.json')  // ফাইলের নাম যদি items.json হয় তাহলে '/items.json' করো
+    fetch('/item.json')  // ← এটা ঠিক আছে (public/item.json → /item.json)
       .then((response) => {
         if (!response.ok) {
-          console.warn('item.json পাওয়া যায়নি বা লোড হয়নি → স্ট্যাটাস:', response.status);
+          console.warn('item.json পাওয়া যায়নি → স্ট্যাটাস:', response.status);
           return [];
         }
         return response.json();
@@ -59,20 +59,21 @@ const CashMemo = ({ className }) => {
         if (Array.isArray(data)) {
           const unique = [...new Set(data)];
           setAvailableItems(unique);
-          console.log("লোড হওয়া আইটেম:", unique); // ডিবাগের জন্য
+          console.log("লোড হওয়া আইটেম:", unique.length, "টা");
         } else {
           setAvailableItems([]);
         }
       })
       .catch((error) => {
-        console.warn('JSON লোড সম্পূর্ণ ব্যর্থ:', error);
+        console.warn('JSON লোড ব্যর্থ:', error);
         setAvailableItems([]);
       });
   }, []);
 
-  // formatValue ফাংশন — এটা অবশ্যই থাকতে হবে
+  // formatValue ফাংশন
   const formatValue = (value) => (value ? convertToBangla(value) : '');
 
+  // isRowEmpty ফাংশন — এটা এখানে রাখা হয়েছে (return-এর আগে)
   const isRowEmpty = (index) => {
     const row = items[index];
     return (
@@ -96,7 +97,6 @@ const CashMemo = ({ className }) => {
     if (field === 'item') {
       const searchTerm = convertedValue.trim();
 
-      // খালি হলে সাজেশন দেখাবে না
       if (searchTerm === '') {
         const newSuggestions = [...rowSuggestions];
         newSuggestions[index] = [];
@@ -104,14 +104,16 @@ const CashMemo = ({ className }) => {
         return;
       }
 
-      // যেকোনো অংশে মিললে দেখাবে (case-insensitive)
       const searchLower = searchTerm.toLowerCase();
-      const filtered = availableItems.filter((item) => {
-        return item.toLowerCase().includes(searchLower);
-      });
+      const filtered = availableItems.filter((item) =>
+        item.toLowerCase().includes(searchLower)
+      );
+
+      // শুধু প্রথম ৫টা আইটেম দেখাবে
+      const limited = filtered.slice(0, 5);
 
       const newSuggestions = [...rowSuggestions];
-      newSuggestions[index] = filtered;
+      newSuggestions[index] = limited;
       setRowSuggestions(newSuggestions);
 
       const newActive = [...activeSuggestionIndex];
