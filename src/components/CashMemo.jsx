@@ -399,7 +399,7 @@ const CashMemo = ({ className }) => {
                     {field==='item' &&
                       rowSuggestions[index]?.length>0 && (
 
-                      <ul className="absolute z-10 bg-white border w-52 md:w-full max-h-48 overflow-y-auto mt-10 rounded-md shadow-lg">
+                      <ul className="absolute z-10 bg-white border w-52 md:w-full max-h-48 h-auto mt-10 rounded-md shadow-lg">
 
                         {rowSuggestions[index].map((sug,sugIndex)=>(
 
