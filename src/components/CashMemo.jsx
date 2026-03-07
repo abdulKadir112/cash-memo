@@ -447,7 +447,49 @@ const CashMemo = ({ className }) => {
 
           ))}
 
+          {/* Total / Net / Tax */}
+<div className="flex justify-end md:justify-between items-start pl-16 pr-2 mt-4 gap-x-6">
 
+<div className="hidden md:flex md:w-40 md:h-20 border border-dashed border-[#7c7c7c7c] justify-center items-center">
+  <p className="text-sm text-[#7c7c7c7c]">সীল ও স্বাক্ষর</p>
+</div>
+
+<div className="flex flex-col gap-y-2 md:gap-y-4">
+  <label htmlFor="tax" className="font-bold text-[12px] md:text-base text-black">
+    ট্যাক্স / জমা:
+  </label>
+
+  <label className="font-bold text-[12px] md:text-base text-green-600">
+    মোট মূল্য:
+  </label>
+
+  <label className="font-bold text-[12px] md:text-base text-blue-600">
+    নেট মূল্য:
+  </label>
+</div>
+
+<div className="w-28 md:w-36 flex flex-col gap-y-1">
+
+  <input
+    type="text"
+    value={formatValue(tax)}
+    onChange={(e)=>handleTaxChange(e.target.value)}
+    className="md:w-36 outline-none bg-gray-100 px-4 md:py-2 rounded-md md:text-lg font-bold text-black placeholder:text-gray-500"
+  />
+
+  <div className="bg-gray-200 pl-4 md:py-2 rounded-md shadow-md text-green-600 font-bold">
+    {formatValue(calculateTotalPrice())} ৳
+  </div>
+
+  <div className={`bg-gray-200 pl-4 md:py-2 rounded-md shadow-md font-bold ${
+    Number(calculateNetPrice()) < 0 ? 'text-red-600' : 'text-blue-600'
+  }`}>
+    {formatValue(calculateNetPrice())} ৳
+  </div>
+
+</div>
+
+</div>
         </ol>
 
 
