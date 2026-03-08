@@ -6,11 +6,13 @@ import {
 } from "react-router-dom";
 import RootLayOut from "./RootLayOut";
 import Home from "./page/Home";
+import CustomerBills from "./page/CustomerBills";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayOut />}>
       <Route index element={<Home />} />
+      <Route path="/Customer" element={<CustomerBills />} />
     </Route>
   )
 );

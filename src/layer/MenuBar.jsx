@@ -1,93 +1,171 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const MenuBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const menuItems = [
-    { name: 'হোম', path: '/' },
-    { name: 'পণ্য', path: './' },
-    { name: 'ক্যাশ মেমো', path: '/' },
-    { name: 'অর্ডার', path: '/' },
-    { name: 'রিপোর্ট', path: '/' },
-    { name: 'সেটিংস', path: '/' },
-  ];
+  const [open, setOpen] = useState(false);
 
   return (
-    <nav className="bg-gray-800 text-white shadow-md">
-      {/* max-w-7xl mx-auto রিমুভ করা হয়েছে → পুরো width নেবে */}
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-
-          {/* লোগো — বাম দিকে */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="text-2xl font-bold">
-              Manu
-            </Link>
+    <>
+      <nav style={styles.nav}>
+        <div style={styles.left}>
+          <div
+            className="hamburger"
+            style={styles.menuIcon}
+            onClick={() => setOpen(true)}
+          >
+            ☰
           </div>
 
-          {/* ডেস্কটপ মেনু */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            <div className="relative group">
-              <button
-                className="text-xl font-semibold px-4 py-2 rounded-md hover:bg-gray-700 transition"
-              >
-                মেনু ▼
-              </button>
-
-              {/* Dropdown */}
-              <div className="absolute left-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="block px-4 py-2 text-base hover:bg-gray-100"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* মোবাইল হ্যামবার্গার */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-700 focus:outline-none"
-            >
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+          <div style={styles.logo}>My Shop</div>
         </div>
+
+        <ul className="desktop-menu" style={styles.desktopMenu}>
+          <li><Link style={styles.link} to="/">হোম</Link></li>
+          <li><Link style={styles.link} to="/products">প্রোডাক্ট</Link></li>
+          <li><Link style={styles.link} to="/customer">কাস্টমার</Link></li>
+          <li><Link style={styles.link} to="/bill">বিল</Link></li>
+          <li><Link style={styles.link} to="/report">রিপোর্ট</Link></li>
+          <li><Link style={styles.link} to="/settings">সেটিংস</Link></li>
+        </ul>
+      </nav>
+
+      {/* মোবাইল সাইডবার */}
+      <div
+        style={{
+          ...styles.sidebar,
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+        }}
+      >
+        <div style={styles.close} onClick={() => setOpen(false)}>✕</div>
+
+        <Link style={styles.sideLink} to="/" onClick={() => setOpen(false)}>হোম</Link>
+        <Link style={styles.sideLink} to="/products" onClick={() => setOpen(false)}>প্রোডাক্ট</Link>
+        <Link style={styles.sideLink} to="/customer" onClick={() => setOpen(false)}>কাস্টমার</Link>
+        <Link style={styles.sideLink} to="/bill" onClick={() => setOpen(false)}>বিল</Link>
+        <Link style={styles.sideLink} to="/report" onClick={() => setOpen(false)}>রিপোর্ট</Link>
+        <Link style={styles.sideLink} to="/settings" onClick={() => setOpen(false)}>সেটিংস</Link>
       </div>
 
-      {/* মোবাইল মেনু */}
-      {isOpen && (
-        <div className="md:hidden bg-gray-800">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700"
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-    </nav>
+      {open && <div style={styles.overlay} onClick={() => setOpen(false)} />}
+    </>
   );
 };
+
+const styles = {
+  nav: {
+    display: "flex",                  // ← এটা ঠিক করা হয়েছে (block → flex)
+    justifyContent: "space-between",
+    alignItems: "center",
+    background: "#0f172a",
+    padding: "12px 16px",             // ← একটু কম padding দিলাম
+    color: "white",
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1001,
+    boxShadow: "0 2px 10px rgba(0,0,0,0.3)", // optional: সুন্দর ছায়া
+  },
+
+  left: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",                      // ← হ্যামবার্গার আর লোগোর মাঝে জায়গা কমানো
+  },
+
+  logo: {
+    fontSize: "20px",
+    fontWeight: "bold",
+  },
+
+  menuIcon: {
+    fontSize: "28px",
+    cursor: "pointer",
+    userSelect: "none",
+    paddingRight: "6px",              // ← হ্যামবার্গারকে একটু ডানে সরানো
+  },
+
+  desktopMenu: {
+    display: "flex",
+    listStyle: "none",
+    margin: 0,
+    padding: 0,
+    gap: "28px",                      // ← ডেস্কটপ লিঙ্কগুলোর মাঝে একটু বেশি জায়গা
+  },
+
+  link: {
+    textDecoration: "none",
+    color: "white",
+    fontSize: "16px",
+  },
+
+  sidebar: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "260px",
+    height: "100%",
+    background: "#111827",
+    padding: "20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    transition: "transform 0.3s ease",
+    zIndex: 1000,
+  },
+
+  sideLink: {
+    color: "white",
+    textDecoration: "none",
+    fontSize: "18px",
+    padding: "10px 12px",
+    borderRadius: "6px",
+    transition: "background 0.2s",
+  },
+
+  close: {
+    fontSize: "32px",
+    cursor: "pointer",
+    alignSelf: "flex-end",
+    marginBottom: "20px",
+    color: "white",
+  },
+
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.5)",
+    zIndex: 999,
+  },
+};
+
+// Media Queries (আগের মতোই রাখা আছে — ভালো কাজ করে)
+const globalStyles = `
+  @media (max-width: 767px) {
+    .desktop-menu {
+      display: none !important;
+    }
+    .hamburger {
+      display: block !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hamburger {
+      display: none !important;
+    }
+    .desktop-menu {
+      display: flex !important;
+    }
+  }
+`;
+
+// একবারই inject করা হবে (App.js / index.js এ রাখতে পারো)
+if (typeof document !== "undefined" && !document.getElementById("menubar-styles")) {
+  const styleSheet = document.createElement("style");
+  styleSheet.id = "menubar-styles";
+  styleSheet.textContent = globalStyles;
+  document.head.appendChild(styleSheet);
+}
 
 export default MenuBar;

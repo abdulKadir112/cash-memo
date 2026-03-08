@@ -317,11 +317,11 @@ const CashMemo = ({ className }) => {
 
     <div className={`${className}`}>
 
-      <Container className="md:w-[700px] flex flex-col">
+      <Container className="bg-orange-200 pt-16 md:w-[700px] flex flex-col">
 
         <ol
           ref={olRef}
-          className="flex flex-col gap-y-4 pb-40 bg-orange-200"
+          className="flex flex-col gap-y-4 mb-28 pb-8 "
         >
 
           <Header/>

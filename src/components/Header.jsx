@@ -17,7 +17,7 @@ const Header = () => {
     const serialNumber = toBanglaNumber("0000000001");
 
     return (
-        <div className='pb-7 md:pb-8'>
+        <div className='pb-2 md:pb-2'>
 
             {/* Top Line */}
             <div className='flex justify-between pt-2.5 px-3'>
@@ -91,7 +91,7 @@ const Header = () => {
             </div>
 
             {/* Title */}
-            <h1 className='text-[12px] md:text-xl text-center text-slate-100 bg-blue-500 py-1 md:py-2 shadow-lg'>
+            <h1 className=' mt-1 text-[12px] md:text-xl text-center text-slate-100 bg-blue-500 py-1 md:py-2 shadow-lg'>
                 নগদ রসিদ
             </h1>
 
