@@ -50,15 +50,17 @@ const CashMemo = ({ className }) => {
     Array.from({ length: 5 }, () => -1)
   );
 
-  // ক্রেতার তথ্য state (Header-এ পাঠানো হবে)
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
 
+  // ক্রমিক বিল নম্বর
+  const [currentBillNo, setCurrentBillNo] = useState(1);
+
   const olRef = useRef(null);
   const lastRowRef = useRef(null);
 
-  // JSON Load (আইটেম লিস্ট)
+  // JSON Load + Last Bill Number Load
   useEffect(() => {
     fetch('/item.json')
       .then((res) => res.json())
@@ -71,6 +73,12 @@ const CashMemo = ({ className }) => {
       .catch(() => {
         setAvailableItems([]);
       });
+
+    // শেষ বিল নম্বর লোড
+    const lastNo = localStorage.getItem('lastBillNo');
+    if (lastNo) {
+      setCurrentBillNo(parseInt(lastNo) + 1);
+    }
   }, []);
 
   const formatValue = (value) => (value ? convertToBangla(value) : '');
@@ -203,6 +211,40 @@ const CashMemo = ({ className }) => {
     return (total - joma).toFixed(2);
   };
 
+  // নতুন ফাংশন: শুধু সেভ করবে (ডাউনলোড ছাড়া)
+  const saveBill = () => {
+    const billData = {
+      id: currentBillNo,
+      savedAt: new Date().toLocaleString('bn-BD'),
+      customer: {
+        name: customerName.trim() || "নাম দেয়া হয়নি",
+        mobile: customerMobile.trim() || "—",
+        address: customerAddress.trim() || "—"
+      },
+      items: items
+        .filter(row => row.item.trim() !== '' && row.quantity.trim() !== '')
+        .map(row => ({
+          item: row.item,
+          quantity: row.quantity,
+          rate: row.rate,
+          taka: row.taka
+        })),
+      tax: tax,
+      total: calculateTotalPrice(),
+      net: calculateNetPrice()
+    };
+
+    const previousBills = JSON.parse(localStorage.getItem('savedCashMemos') || '[]');
+    previousBills.push(billData);
+    localStorage.setItem('savedCashMemos', JSON.stringify(previousBills));
+
+    // পরবর্তী নম্বরের জন্য আপডেট
+    localStorage.setItem('lastBillNo', currentBillNo.toString());
+    setCurrentBillNo(prev => prev + 1);
+
+    alert(`বিল নং ${convertToBangla(currentBillNo)} সফলভাবে সেভ হয়েছে!`);
+  };
+
   const downloadOlAsImage = async () => {
     if (!olRef.current) return;
 
@@ -212,12 +254,10 @@ const CashMemo = ({ className }) => {
         pixelRatio: 2,
       });
 
-      // ইমেজ ডাউনলোড
-      saveAs(dataUrl, `cash-memo-${Date.now()}.png`);
+      saveAs(dataUrl, `cash-memo-${currentBillNo}.png`);
 
-      // JSON ডেটা তৈরি
       const billData = {
-        id: Date.now(),
+        id: currentBillNo,
         savedAt: new Date().toLocaleString('bn-BD'),
         customer: {
           name: customerName.trim() || "নাম দেয়া হয়নি",
@@ -237,10 +277,12 @@ const CashMemo = ({ className }) => {
         net: calculateNetPrice()
       };
 
-      // localStorage-এ সেভ
       const previousBills = JSON.parse(localStorage.getItem('savedCashMemos') || '[]');
       previousBills.push(billData);
       localStorage.setItem('savedCashMemos', JSON.stringify(previousBills));
+
+      localStorage.setItem('lastBillNo', currentBillNo.toString());
+      setCurrentBillNo(prev => prev + 1);
 
       alert('বিল ডাউনলোড হয়েছে এবং localStorage-এ সেভ হয়েছে!');
 
@@ -263,6 +305,7 @@ const CashMemo = ({ className }) => {
             setCustomerMobile={setCustomerMobile}
             customerAddress={customerAddress}
             setCustomerAddress={setCustomerAddress}
+            serialNumber={currentBillNo}
           />
 
           {items.map((row, index) => (
@@ -369,6 +412,7 @@ const CashMemo = ({ className }) => {
           </div>
         </ol>
 
+        {/* নিচের ফিক্সড বাটনগুলো — এখানে নতুন "বিল সেভ করুন" বাটন যোগ করা হয়েছে */}
         <div className="fixed bottom-0 left-0 right-0 mx-auto max-w-[700px] w-full bg-orange-200 z-10 p-4 flex flex-col gap-2">
           <button
             onClick={addNewRow}
@@ -377,12 +421,21 @@ const CashMemo = ({ className }) => {
             রো যোগ করুন
           </button>
 
-          <button
-            onClick={downloadOlAsImage}
-            className="w-full bg-green-500 text-white py-3 rounded-md"
-          >
-            ডাউনলোড করুন
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={saveBill}
+              className="w-1/2 bg-purple-600 text-white py-3 rounded-md"
+            >
+              বিল সেভ করুন
+            </button>
+
+            <button
+              onClick={downloadOlAsImage}
+              className="w-1/2 bg-green-500 text-white py-3 rounded-md"
+            >
+              ডাউনলোড করুন
+            </button>
+          </div>
         </div>
 
       </Container>

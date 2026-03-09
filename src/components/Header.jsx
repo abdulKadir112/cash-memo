@@ -7,7 +7,7 @@ const Header = ({
   setCustomerMobile = () => {},
   customerAddress = "",
   setCustomerAddress = () => {},
-  serialNumber = null
+  serialNumber = 1
 }) => {
   const today = new Date();
 
@@ -20,9 +20,7 @@ const Header = ({
   const month = toBanglaNumber((today.getMonth() + 1).toString().padStart(2, "0"));
   const year  = toBanglaNumber(today.getFullYear());
 
-  const displaySerial = serialNumber 
-    ? toBanglaNumber(serialNumber.toString().padStart(10, '0'))
-    : toBanglaNumber((today.getTime() % 1000000).toString().padStart(6, '0'));
+  const displaySerial = toBanglaNumber(serialNumber.toString().padStart(6, '0'));
 
   return (
     <div className='pb-2 md:pb-2'>
