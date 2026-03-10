@@ -21,7 +21,6 @@ const ProductPage = () => {
     images: [
       "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800",
       "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
-      "https://images.unsplash.com/photo-1607345366928-199ea5fe3a09?w=800",
       "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=800",
     ],
     colors: ["সাদা", "কালো", "নীল", "ধূসর"],
@@ -39,7 +38,7 @@ const ProductPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-10">
+    <div className="mt-12 min-h-screen bg-gray-50 py-6 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* প্রোডাক্ট মেইন সেকশন */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">

@@ -9,6 +9,7 @@ import Home from "./page/Home";
 import CustomerBills from "./page/CustomerBills";
 import ProductPage from "./components/ProductPage";
 import ReportsOverview from "./components/ReportsOverview";
+import Profile from "./components/Profile";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -17,6 +18,7 @@ const router = createBrowserRouter(
       <Route path="/customer" element={<CustomerBills />} />
       <Route path="/products" element={<ProductPage />} />
       <Route path="/report" element={<ReportsOverview />} />
+      <Route path="/profile" element={<Profile />} />
     </Route>
   )
 );

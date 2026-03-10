@@ -39,9 +39,9 @@ const MenuBar = () => {
         <div style={styles.close} onClick={() => setOpen(false)}>✕</div>
 
         <Link style={styles.sideLink} to="/" onClick={() => setOpen(false)}>হোম</Link>
+        <Link style={styles.sideLink} to="/profile" onClick={() => setOpen(false)}>প্রোফাইল</Link>
         <Link style={styles.sideLink} to="/products" onClick={() => setOpen(false)}>প্রোডাক্ট</Link>
         <Link style={styles.sideLink} to="/customer" onClick={() => setOpen(false)}>কাস্টমার</Link>
-        <Link style={styles.sideLink} to="/bill" onClick={() => setOpen(false)}>বিল</Link>
         <Link style={styles.sideLink} to="/report" onClick={() => setOpen(false)}>রিপোর্ট</Link>
         <Link style={styles.sideLink} to="/settings" onClick={() => setOpen(false)}>সেটিংস</Link>
       </div>
