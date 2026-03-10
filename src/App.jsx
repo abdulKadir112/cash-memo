@@ -10,6 +10,8 @@ import CustomerBills from "./page/CustomerBills";
 import ProductPage from "./components/ProductPage";
 import ReportsOverview from "./components/ReportsOverview";
 import Profile from "./components/Profile";
+import EditProfile from "./components/EditProfile";
+import Settings from "./components/Setting";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -19,6 +21,8 @@ const router = createBrowserRouter(
       <Route path="/products" element={<ProductPage />} />
       <Route path="/report" element={<ReportsOverview />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/edit-profile" element={<EditProfile/>} />
+      <Route path="/settings" element={<Settings/>} />
     </Route>
   )
 );

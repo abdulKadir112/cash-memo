@@ -21,7 +21,7 @@ const MenuBar = () => {
 
         <ul className="desktop-menu" style={styles.desktopMenu}>
           <li><Link style={styles.link} to="/">হোম</Link></li>
-          <li><Link style={styles.link} to="/products">প্রোডাক্ট</Link></li>
+          <li><Link style={styles.link} to="/profile">প্রোফাইল</Link></li>
           <li><Link style={styles.link} to="/customer">কাস্টমার</Link></li>
           <li><Link style={styles.link} to="/bill">বিল</Link></li>
           <li><Link style={styles.link} to="/report">রিপোর্ট</Link></li>
