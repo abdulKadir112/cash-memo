@@ -1,0 +1,17 @@
+/* সব placeholder-এর সাধারণ স্টাইল (সবসময় দৃশ্যমান থাকবে) */
+input::placeholder,
+textarea::placeholder {
+  color: #a0a0a0;
+  opacity: 0.7;
+}
+
+/* ডাউনলোডের জন্য খুব হালকা করার ক্লাস */
+.placeholder-light-download::placeholder {
+  color: #d0d0d0 !important;
+  opacity: 0.45 !important;
+}
+
+/* ডাউনলোডের সময় ইনপুটের টেক্সট যেন কালোই থাকে */
+.placeholder-light-download {
+  color: #000000 !important;
+}
